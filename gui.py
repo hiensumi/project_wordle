@@ -1,10 +1,14 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 import os
 from word_manager import WordManager
 from game import Game
 
-# Cấu hình màu sắc giao diện theo bảng màu gốc của Wordle (Dark Theme)
+# Khởi tạo chủ đề mặc định
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("green")
+
+# Cấu hình màu sắc giao diện theo bảng màu gốc của Wordle
 BG_COLOR = "#121213"
 TEXT_COLOR = "#ffffff"
 CORRECT_COLOR = "#538d4e"
@@ -18,7 +22,7 @@ class WordleGUI:
         self.root = root
         self.root.title("Wordle DSA Visual")
         self.root.geometry("550x750")
-        self.root.configure(bg=BG_COLOR)
+        self.root.configure(fg_color=BG_COLOR)
         self.root.resizable(False, False)
         
         # Load quản lý từ vựng
@@ -34,22 +38,22 @@ class WordleGUI:
 
     def show_difficulty_selection(self):
         """Màn hình chọn cấp độ đầu tiên bằng GUI"""
-        self.setup_frame = tk.Frame(self.root, bg=BG_COLOR)
+        self.setup_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
         self.setup_frame.pack(expand=True, fill='both')
         
-        tk.Label(self.setup_frame, text="WORDLE 6+", font=("Helvetica", 42, "bold"), bg=BG_COLOR, fg=TEXT_COLOR).pack(pady=(120, 20))
-        tk.Label(self.setup_frame, text="Đồ án môn DSA (Cấu trúc dữ liệu)", font=("Helvetica", 14), bg=BG_COLOR, fg=KEY_BG).pack(pady=(0, 40))
+        ctk.CTkLabel(self.setup_frame, text="WORDLE 6+", font=("Helvetica", 42, "bold"), text_color=TEXT_COLOR).pack(pady=(120, 20))
+        ctk.CTkLabel(self.setup_frame, text="Đồ án môn DSA (Cấu trúc dữ liệu)", font=("Helvetica", 14), text_color=KEY_BG).pack(pady=(0, 40))
         
-        tk.Label(self.setup_frame, text="Vui lòng chọn độ khó:", font=("Helvetica", 16, "bold"), bg=BG_COLOR, fg=TEXT_COLOR).pack(pady=10)
+        ctk.CTkLabel(self.setup_frame, text="Vui lòng chọn độ khó:", font=("Helvetica", 16, "bold"), text_color=TEXT_COLOR).pack(pady=10)
         
-        tk.Button(self.setup_frame, text="Dễ (Easy)", font=("Helvetica", 14), bg=CORRECT_COLOR, fg=TEXT_COLOR, 
-                  activebackground="#43723e", activeforeground="white", command=lambda: self.start_game('easy')).pack(pady=5, ipadx=40, ipady=5)
+        ctk.CTkButton(self.setup_frame, text="Dễ (Easy)", font=("Helvetica", 14, "bold"), fg_color=CORRECT_COLOR, hover_color="#43723e", 
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('easy'), height=45, width=200).pack(pady=10)
                   
-        tk.Button(self.setup_frame, text="Trung bình (Medium)", font=("Helvetica", 14), bg=PRESENT_COLOR, fg=TEXT_COLOR, 
-                  activebackground="#968331", activeforeground="white", command=lambda: self.start_game('medium')).pack(pady=5, ipadx=10, ipady=5)
+        ctk.CTkButton(self.setup_frame, text="Trung bình (Medium)", font=("Helvetica", 14, "bold"), fg_color=PRESENT_COLOR, hover_color="#968331", 
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('medium'), height=45, width=200).pack(pady=10)
                   
-        tk.Button(self.setup_frame, text="Khó (Hard)", font=("Helvetica", 14), bg=ABSENT_COLOR, fg=TEXT_COLOR, 
-                  activebackground="#2b2b2d", activeforeground="white", command=lambda: self.start_game('hard')).pack(pady=5, ipadx=40, ipady=5)
+        ctk.CTkButton(self.setup_frame, text="Khó (Hard)", font=("Helvetica", 14, "bold"), fg_color=ABSENT_COLOR, hover_color="#2b2b2d", 
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('hard'), height=45, width=200).pack(pady=10)
 
     def start_game(self, difficulty):
         """Khởi tạo Board cho Game sau khi chọn độ khó"""
@@ -66,50 +70,51 @@ class WordleGUI:
         
     def build_ui(self):
         """Xây dựng khung lưới bảng chơi và bàn phím"""
-        tk.Label(self.root, text="WORDLE", font=("Helvetica", 28, "bold"), bg=BG_COLOR, fg=TEXT_COLOR).pack(pady=(20, 10))
+        ctk.CTkLabel(self.root, text="WORDLE", font=("Helvetica", 28, "bold"), text_color=TEXT_COLOR).pack(pady=(20, 10))
         
         # Grid chữ cái
-        self.grid_frame = tk.Frame(self.root, bg=BG_COLOR)
+        self.grid_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
         self.grid_frame.pack(pady=10)
         
         self.labels = []
         for i in range(8):
             row_labels = []
             for j in range(6):
-                # Tạo các ô label trống để chứa chữ cái
-                lbl = tk.Label(self.grid_frame, text="", font=("Helvetica", 24, "bold"), bg=BG_COLOR, fg=TEXT_COLOR, 
-                               width=3, height=1, relief="solid", borderwidth=1, highlightbackground=BORDER_COLOR)
+                # Tạo các ô label (CTkButton không bấm được để làm ô hiện text đẹp hơn CTkLabel)
+                lbl = ctk.CTkLabel(self.grid_frame, text="", font=("Helvetica", 24, "bold"), text_color=TEXT_COLOR, 
+                                   width=50, height=50, fg_color=BG_COLOR)
                 lbl.grid(row=i, column=j, padx=4, pady=4)
+                
+                # Để border bo góc đẹp, ta dùng một CTkFrame nhỏ bọc ngoài (hack nhẹ ở CTk)
+                # Tuy nhiên ở đây tối ưu nhất là thay label.configure
                 row_labels.append(lbl)
             self.labels.append(row_labels)
             
-        # Keyboard ảo dước đáy màn hình
-        self.keyboard_frame = tk.Frame(self.root, bg=BG_COLOR)
+        # Keyboard ảo dưới đáy màn hình
+        self.keyboard_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
         self.keyboard_frame.pack(pady=30)
         
         self.keys = {}
         rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
         for r_idx, row in enumerate(rows):
-            row_frame = tk.Frame(self.keyboard_frame, bg=BG_COLOR)
+            row_frame = ctk.CTkFrame(self.keyboard_frame, fg_color=BG_COLOR)
             row_frame.pack(pady=3)
             
-            # Cột hàng thứ 3 có thêm phím ENTER
             if r_idx == 2:
-                btn = tk.Button(row_frame, text="ENTER", font=("Helvetica", 10, "bold"), bg=KEY_BG, fg=TEXT_COLOR, 
-                                command=self.submit_guess, width=6, borderwidth=0)
-                btn.pack(side="left", padx=3, ipady=8)
+                btn = ctk.CTkButton(row_frame, text="ENTER", font=("Helvetica", 12, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
+                                    command=self.submit_guess, width=65, height=45, hover_color="#6c6e6f")
+                btn.pack(side="left", padx=3)
                 
             for char in row:
-                btn = tk.Button(row_frame, text=char, font=("Helvetica", 11, "bold"), bg=KEY_BG, fg=TEXT_COLOR, 
-                                width=3, borderwidth=0, command=lambda c=char: self.type_char(c))
-                btn.pack(side="left", padx=2, ipady=8)
+                btn = ctk.CTkButton(row_frame, text=char, font=("Helvetica", 14, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
+                                    width=40, height=45, command=lambda c=char: self.type_char(c), hover_color="#6c6e6f")
+                btn.pack(side="left", padx=2)
                 self.keys[char] = btn
                 
-            # Cột hàng thứ 3 có thêm phím XÓA (Backspace)
             if r_idx == 2:
-                btn = tk.Button(row_frame, text="⌫", font=("Helvetica", 12), bg=KEY_BG, fg=TEXT_COLOR, 
-                                command=self.delete_char, width=4, borderwidth=0)
-                btn.pack(side="left", padx=3, ipady=8)
+                btn = ctk.CTkButton(row_frame, text="⌫", font=("Helvetica", 16), fg_color=KEY_BG, text_color=TEXT_COLOR, 
+                                    command=self.delete_char, width=50, height=45, hover_color="#6c6e6f")
+                btn.pack(side="left", padx=3)
 
     def handle_keypress(self, event):
         """Xử lý sự kiện khi gõ bàn phím vật lý"""
@@ -138,9 +143,9 @@ class WordleGUI:
     def update_current_row(self):
         for i in range(6):
             if i < len(self.current_guess):
-                self.labels[self.current_row][i].config(text=self.current_guess[i], relief="solid", borderwidth=2)
+                self.labels[self.current_row][i].configure(text=self.current_guess[i], fg_color="#3a3a3c")
             else:
-                self.labels[self.current_row][i].config(text="", relief="solid", borderwidth=1)
+                self.labels[self.current_row][i].configure(text="", fg_color=BG_COLOR)
 
     def submit_guess(self):
         if self.game.is_over: return
@@ -156,7 +161,7 @@ class WordleGUI:
         # Nạp từ vào logic game
         eval_result = self.game.make_guess(self.current_guess)
         
-        # Mở màu trên lướt Grid
+        # Mở màu trên lưới Grid
         for i, (char, status) in enumerate(eval_result):
             color = BG_COLOR
             if status == Game.CORRECT:
@@ -166,16 +171,18 @@ class WordleGUI:
             else:
                 color = ABSENT_COLOR
                 
-            self.labels[self.current_row][i].config(bg=color, fg=TEXT_COLOR, relief="flat")
+            self.labels[self.current_row][i].configure(fg_color=color, text_color=TEXT_COLOR, corner_radius=6)
             
         # Cập nhật màu lên bàn phím ảo
         for char, status in self.game.letter_status.items():
-            if status == Game.CORRECT:
-                self.keys[char].config(bg=CORRECT_COLOR)
-            elif status == Game.PRESENT and self.keys[char]['bg'] != CORRECT_COLOR:
-                self.keys[char].config(bg=PRESENT_COLOR)
-            elif status == Game.ABSENT and self.keys[char]['bg'] not in [CORRECT_COLOR, PRESENT_COLOR]:
-                self.keys[char].config(bg=ABSENT_COLOR)
+            if char in self.keys:
+                current_bg = self.keys[char].cget("fg_color")
+                if status == Game.CORRECT:
+                    self.keys[char].configure(fg_color=CORRECT_COLOR, hover_color=CORRECT_COLOR)
+                elif status == Game.PRESENT and current_bg != CORRECT_COLOR:
+                    self.keys[char].configure(fg_color=PRESENT_COLOR, hover_color=PRESENT_COLOR)
+                elif status == Game.ABSENT and current_bg not in [CORRECT_COLOR, PRESENT_COLOR]:
+                    self.keys[char].configure(fg_color=ABSENT_COLOR, hover_color=ABSENT_COLOR)
 
         self.current_row += 1
         self.current_guess = ""
@@ -183,20 +190,20 @@ class WordleGUI:
         if self.game.is_won:
             self.show_end_game_msg("✨ CHIẾN THẮNG ✨", f"Chúc mừng! Bạn đã đoán đúng từ \n'{self.game.answer}'\nsau {self.current_row} lượt.")
         elif self.game.is_over:
-            self.show_end_game_msg("❌ THUA CUỘC ❌", f"Bạn đã hết lượt chơi.\nTừ hiển nhiên là: '{self.game.answer}'")
+            self.show_end_game_msg("❌ THUA CUỘC ❌", f"Bạn đã hết lượt chơi.\nTừ chính xác là: '{self.game.answer}'")
 
     def show_end_game_msg(self, title, message):
         """Hộp thoại cuối màn chơi"""
         response = messagebox.askyesno(title, f"{message}\n\nBạn có muốn chơi ván mới không?")
         if response:
             self.root.destroy()
-            new_root = tk.Tk()
+            new_root = ctk.CTk()
             app = WordleGUI(new_root)
             new_root.mainloop()
         else:
             self.root.destroy()
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = ctk.CTk()
     app = WordleGUI(root)
     root.mainloop()
