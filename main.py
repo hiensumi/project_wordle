@@ -37,6 +37,9 @@ def main():
     UI.print_header(max_guesses, word_length)
     
     while not game.is_over:
+        # In ra bàn phím tình trạng chữ cái
+        UI.print_keyboard(game.letter_status)
+
         # Lấy số lượt còn lại & yêu cầu nhập
         remains = game.get_remaining_guesses()
         prompt = f"Lượt đoán {game.max_guesses - remains + 1}/{game.max_guesses} > "

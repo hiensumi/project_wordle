@@ -51,6 +51,38 @@ class UI:
         for char, status in evaluation:
             UI.print_colored_char(char, status)
         print() # Xuống dòng
+
+    @staticmethod
+    def print_keyboard(letter_status: dict) -> None:
+        """
+        In bàn phím ảo hiển thị trạng thái các chữ cái đã được dùng.
+        
+        Args:
+            letter_status (dict): Từ điển ánh xạ kí tự -> trạng thái của nó.
+        """
+        rows = [
+            "QWERTYUIOP",
+            "ASDFGHJKL",
+            "ZXCVBNM"
+        ]
+        
+        print("\nBàn phím trạng thái:")
+        for row in rows:
+            print(" " * (10 - len(row)), end="") # Căn giữa đơn giản
+            for char in row:
+                status = letter_status.get(char)
+                color = UI.RESET # Trắng/Mặc định nếu chưa dùng
+                
+                if status == UI.CORRECT:
+                    color = UI.GREEN
+                elif status == UI.PRESENT:
+                    color = UI.YELLOW
+                elif status == UI.ABSENT:
+                    color = UI.GRAY
+                    
+                sys.stdout.write(f"{UI.BOLD}{color}[{char}]{UI.RESET} ")
+            print() # Xuống dòng cho mỗi row của bàn phím
+        print() # Dòng trống cuối
         
     @staticmethod
     def print_header(max_guesses: int, word_length: int) -> None:

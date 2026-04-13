@@ -20,6 +20,7 @@ class Game:
         self.answer = answer.upper()
         self.max_guesses = max_guesses
         self.guesses = []  # Lưu trữ các lần đoán
+        self.letter_status = {chr(i): None for i in range(65, 91)} # Trạng thái các chữ cái A-Z
         self.is_won = False
         self.is_over = False
 
@@ -87,6 +88,16 @@ class Game:
         guess = guess.upper()
         evaluation = self.evaluate_guess(guess)
         self.guesses.append(evaluation)
+        
+        # Cập nhật trạng thái bàn phím chữ cái
+        for char, status in evaluation:
+            current_status = self.letter_status.get(char)
+            if status == self.CORRECT:
+                self.letter_status[char] = self.CORRECT
+            elif status == self.PRESENT and current_status != self.CORRECT:
+                self.letter_status[char] = self.PRESENT
+            elif status == self.ABSENT and current_status not in (self.CORRECT, self.PRESENT):
+                self.letter_status[char] = self.ABSENT
         
         # Kiểm tra chiến thắng hoặc thua
         if guess == self.answer:
