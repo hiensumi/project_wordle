@@ -6,29 +6,49 @@ class WordManager:
     Quản lý danh sách các từ hợp lệ cho trò chơi Wordle.
     Đọc từ file text và cung cấp các hàm kiểm tra từ hợp lệ hoặc chọn từ ngẫu nhiên.
     """
-    def __init__(self, filepath: str = 'words.txt'):
+    def __init__(self, base_dir: str):
         """
-        Khởi tạo WordManager bằng cách đọc danh sách từ từ file.
+        Khởi tạo WordManager bằng cách đọc danh sách từ từ file và phân loại độ khó.
         
         Args:
-            filepath (str): Đường dẫn đến file chứa danh sách từ. Mặc định là 'words.txt'.
+            base_dir (str): Thư mục chứa các file từ điển.
         """
-        self.words = set()
-        self.filepath = filepath
+        self.words = set()  # Tất cả từ hợp lệ (để kiểm tra nhập vào)
+        self.easy_words = set()
+        self.medium_words = set()
+        self.hard_words = set()
+        
+        self.base_dir = base_dir
         self._load_words()
+
+    def _read_file(self, filename: str) -> set:
+        """Đọc và trả về danh sách từ từ một file cụ thể."""
+        filepath = os.path.join(self.base_dir, filename)
+        words_set = set()
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                for line in f:
+                    word = line.strip().upper()
+                    if len(word) == 6 and word.isalpha():
+                        words_set.add(word)
+        return words_set
 
     def _load_words(self):
         """
-        Đọc và lưu trữ các từ hợp lệ có đúng 6 chữ cái từ file.
+        Đọc tất cả các file từ điển và phân loại độ khó.
         """
-        if not os.path.exists(self.filepath):
-            raise FileNotFoundError(f"Không tìm thấy file {self.filepath}")
-            
-        with open(self.filepath, 'r', encoding='utf-8') as f:
-            for line in f:
-                word = line.strip().upper()
-                if len(word) == 6 and word.isalpha():
-                    self.words.add(word)
+        # Từ vựng hợp lệ để đoán (Tổng hợp của tất cả)
+        self.words = self._read_file('words.txt')
+        
+        # Phân loại để chọn đáp án
+        self.easy_words = self._read_file('words_easy.txt')
+        self.medium_words = self._read_file('words_medium.txt')
+        self.hard_words = self._read_file('words_hard.txt')
+        
+        # Nếu thiếu danh sách chia độ khó (VD: chưa chạy build file), dự phòng = toàn bộ words
+        if not self.easy_words: self.easy_words = self.words.copy()
+        if not self.medium_words: self.medium_words = self.words.copy()
+        if not self.hard_words: self.hard_words = self.words.copy()
 
     def is_valid(self, word: str) -> bool:
         """
@@ -42,13 +62,22 @@ class WordManager:
         """
         return word.upper() in self.words
 
-    def get_random_word(self) -> str:
+    def get_random_word(self, difficulty: str = 'medium') -> str:
         """
-        Lấy một từ ngẫu nhiên từ danh sách làm đáp án cho trò chơi.
+        Lấy một từ ngẫu nhiên từ danh sách làm đáp án cho trò chơi theo cấp độ.
         
+        Args:
+            difficulty (str): 'easy', 'medium', 'hard'
         Returns:
             str: Một từ ngẫu nhiên có 6 chữ cái.
         """
-        if not self.words:
-            raise ValueError("Danh sách từ trống.")
-        return random.choice(list(self.words))
+        if difficulty == 'easy':
+            target_list = self.easy_words
+        elif difficulty == 'hard':
+            target_list = self.hard_words
+        else: # medium làm mặc định
+            target_list = self.medium_words
+            
+        if not target_list:
+            raise ValueError(f"Danh sách từ ({difficulty}) trống.")
+        return random.choice(list(target_list))

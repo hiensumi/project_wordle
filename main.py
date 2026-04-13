@@ -11,19 +11,22 @@ def main():
     Chịu trách nhiệm khởi tạo manager, game logic và xử lý thông điệp gửi tới UI.
     """
     try:
-        # Đường dẫn file danh sách từ
+        # Thư mục gốc dự án
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        words_file = os.path.join(base_dir, 'words.txt')
         
-        # Khởi tạo quản lý danh sách từ
-        manager = WordManager(words_file)
+        # Khởi tạo quản lý danh sách từ với base directory
+        manager = WordManager(base_dir)
     except FileNotFoundError as e:
         print(f"Lỗi khởi tạo danh sách từ: {e}")
         sys.exit(1)
         
+    # Chọn độ khó game
+    UI.print_difficulty_menu()
+    difficulty = UI.get_difficulty_choice()
+        
     try:
-        # Lấy từ ngẫu nhiên
-        answer = manager.get_random_word()
+        # Lấy từ ngẫu nhiên theo độ khó
+        answer = manager.get_random_word(difficulty)
     except ValueError as e:
         print(f"Lỗi lấy từ ngẫu nhiên: {e}")
         sys.exit(1)

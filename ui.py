@@ -103,6 +103,32 @@ class UI:
         print("="*40 + "\n")
 
     @staticmethod
+    def print_difficulty_menu() -> None:
+        """
+        In menu bảng chọn độ khó.
+        """
+        print(f"{UI.BOLD}Chọn độ khó cho từ đích:{UI.RESET}")
+        print(f"1. {UI.GREEN}Dễ (Easy){UI.RESET} - 1000 từ vựng phổ biến nhất")
+        print(f"2. {UI.YELLOW}Trung bình (Medium){UI.RESET} - 3000 từ vựng phổ thông")
+        print(f"3. {UI.GRAY}Khó (Hard){UI.RESET} - Hơn 25.000 từ vựng hiếm và chuyên ngành")
+
+    @staticmethod
+    def get_difficulty_choice() -> str:
+        """
+        Lấy lựa chọn độ khó từ người dùng.
+        """
+        while True:
+            choice = input(f"Nhập lựa chọn của bạn (1/2/3) > ").strip()
+            if choice == '1':
+                return 'easy'
+            elif choice == '2':
+                return 'medium'
+            elif choice == '3':
+                return 'hard'
+            else:
+                print(f"{UI.YELLOW}Lựa chọn không hợp lệ, vui lòng nhập lại.{UI.RESET}")
+
+    @staticmethod
     def get_user_input(prompt: str) -> str:
         """
         Nhập dữ liệu với prompt.
