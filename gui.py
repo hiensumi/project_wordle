@@ -21,7 +21,7 @@ class WordleGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Wordle DSA Visual")
-        self.root.geometry("550x750")
+        self.root.geometry("550x800")
         self.root.configure(fg_color=BG_COLOR)
         self.root.resizable(False, False)
         
@@ -81,17 +81,15 @@ class WordleGUI:
         for i in range(8):
             row_labels = []
             for j in range(6):
-                # Khung chữ cải tiến: Có viền (border) nét 2px chuẩn gốc
-                lbl = ctk.CTkLabel(self.grid_frame, text="", font=("Helvetica", 24, "bold"), text_color=TEXT_COLOR, 
-                                   width=50, height=50, fg_color=BG_COLOR)
-                lbl.configure(corner_radius=2)
-                
                 # Bọc trong Frame con để vẽ viền siêu mảnh, chống giật font CTkLabel
                 container = ctk.CTkFrame(self.grid_frame, fg_color=BG_COLOR, width=54, height=54, 
                                          border_width=2, border_color="#3a3a3c", corner_radius=4)
                 container.grid(row=i, column=j, padx=4, pady=4)
                 container.grid_propagate(False)
                 
+                # Khung chữ cải tiến: Có viền (border) nét 2px chuẩn gốc
+                lbl = ctk.CTkLabel(container, text="", font=("Helvetica", 24, "bold"), text_color=TEXT_COLOR, 
+                                   width=50, height=50, fg_color=BG_COLOR, corner_radius=2)
                 lbl.place(relx=0.5, rely=0.5, anchor="center")
                 
                 row_labels.append({"lbl": lbl, "container": container})
