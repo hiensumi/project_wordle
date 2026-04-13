@@ -64,6 +64,7 @@ class WordleGUI:
         
         self.current_guess = ""
         self.current_row = 0
+        self.is_animating = False
         
         self.build_ui()
         self.root.bind("<Key>", self.handle_keypress)
@@ -118,7 +119,7 @@ class WordleGUI:
 
     def handle_keypress(self, event):
         """Xử lý sự kiện khi gõ bàn phím vật lý"""
-        if self.game.is_over: return
+        if self.game.is_over or self.is_animating: return
         
         char = event.keysym.upper()
         if char.isalpha() and len(char) == 1:
@@ -129,13 +130,13 @@ class WordleGUI:
             self.submit_guess()
 
     def type_char(self, char):
-        if self.game.is_over: return
+        if self.game.is_over or self.is_animating: return
         if len(self.current_guess) < 6:
             self.current_guess += char
             self.update_current_row()
 
     def delete_char(self):
-        if self.game.is_over: return
+        if self.game.is_over or self.is_animating: return
         if len(self.current_guess) > 0:
             self.current_guess = self.current_guess[:-1]
             self.update_current_row()
@@ -143,26 +144,57 @@ class WordleGUI:
     def update_current_row(self):
         for i in range(6):
             if i < len(self.current_guess):
-                self.labels[self.current_row][i].configure(text=self.current_guess[i], fg_color="#3a3a3c")
+                # Hiệu ứng phóng to nhẹ khi gõ (Pop effect)
+                self.labels[self.current_row][i].configure(text=self.current_guess[i], fg_color="#3a3a3c", font=("Helvetica", 28, "bold"))
+                self.root.after(50, lambda idx=i: self.labels[self.current_row][idx].configure(font=("Helvetica", 24, "bold")))
             else:
                 self.labels[self.current_row][i].configure(text="", fg_color=BG_COLOR)
 
+    def show_toast(self, message):
+        """Hiển thị thông báo tạm thời phía trên màn hình"""
+        toast = ctk.CTkLabel(self.root, text=message, fg_color=TEXT_COLOR, text_color=BG_COLOR, 
+                             corner_radius=6, font=("Helvetica", 14, "bold"), width=300, height=40)
+        toast.place(relx=0.5, rely=0.1, anchor="center")
+        self.root.after(1500, toast.destroy)
+
+    def animate_shake(self):
+        """Hiệu ứng rung bàn chơi cảnh báo nhập sai"""
+        original_x = self.root.winfo_x()
+        original_y = self.root.winfo_y()
+        offsets = [10, -10, 8, -8, 5, -5, 0]
+        
+        def step(i=0):
+            if i < len(offsets):
+                self.root.geometry(f"+{original_x + offsets[i]}+{original_y}")
+                self.root.after(50, step, i + 1)
+                
+        step()
+
     def submit_guess(self):
-        if self.game.is_over: return
+        if self.game.is_over or self.is_animating: return
         
         if len(self.current_guess) != 6:
-            messagebox.showwarning("Thiếu ký tự", "Từ bạn nhập phải có đủ 6 chữ cái!")
+            self.show_toast("Từ bạn nhập phải có đủ 6 chữ cái!")
+            self.animate_shake()
             return
             
         if not self.manager.is_valid(self.current_guess):
-            messagebox.showwarning("Không hợp lệ", f"'{self.current_guess}' không có trong từ điển tiếng Anh!")
+            self.show_toast("Từ này không có trong từ điển tiếng Anh!")
+            self.animate_shake()
             return
             
         # Nạp từ vào logic game
         eval_result = self.game.make_guess(self.current_guess)
         
-        # Mở màu trên lưới Grid
-        for i, (char, status) in enumerate(eval_result):
+        # Bắt đầu chuỗi animation lật ô màu
+        self.is_animating = True
+        self.animate_reveal(0, eval_result)
+
+    def animate_reveal(self, col, eval_result):
+        """Hiệu ứng lật mở màu tuần tự từng ô chữ cái"""
+        if col < 6:
+            char, status = eval_result[col]
+            
             color = BG_COLOR
             if status == Game.CORRECT:
                 color = CORRECT_COLOR
@@ -171,10 +203,10 @@ class WordleGUI:
             else:
                 color = ABSENT_COLOR
                 
-            self.labels[self.current_row][i].configure(fg_color=color, text_color=TEXT_COLOR, corner_radius=6)
+            # Đổi màu ô Grid
+            self.labels[self.current_row][col].configure(fg_color=color, text_color=TEXT_COLOR, corner_radius=6)
             
-        # Cập nhật màu lên bàn phím ảo
-        for char, status in self.game.letter_status.items():
+            # Cập nhật màu lên bàn phím ảo tương ứng ngay lập tức
             if char in self.keys:
                 current_bg = self.keys[char].cget("fg_color")
                 if status == Game.CORRECT:
@@ -183,14 +215,20 @@ class WordleGUI:
                     self.keys[char].configure(fg_color=PRESENT_COLOR, hover_color=PRESENT_COLOR)
                 elif status == Game.ABSENT and current_bg not in [CORRECT_COLOR, PRESENT_COLOR]:
                     self.keys[char].configure(fg_color=ABSENT_COLOR, hover_color=ABSENT_COLOR)
-
-        self.current_row += 1
-        self.current_guess = ""
-        
-        if self.game.is_won:
-            self.show_end_game_msg("✨ CHIẾN THẮNG ✨", f"Chúc mừng! Bạn đã đoán đúng từ \n'{self.game.answer}'\nsau {self.current_row} lượt.")
-        elif self.game.is_over:
-            self.show_end_game_msg("❌ THUA CUỘC ❌", f"Bạn đã hết lượt chơi.\nTừ chính xác là: '{self.game.answer}'")
+            
+            # Gọi đệ quy hàm để lật ô kế tiếp sau 250ms
+            self.root.after(250, self.animate_reveal, col + 1, eval_result)
+        else:
+            # Khi đã lật đủ 6 ô:
+            self.is_animating = False
+            self.current_row += 1
+            self.current_guess = ""
+            
+            # Đợi một nhịp 300ms rồi mới kết thúc để người chơi kịp nhìn màu
+            if self.game.is_won:
+                self.root.after(300, lambda: self.show_end_game_msg("✨ TỪ CHÍNH XÁC ✨", f"Chúc mừng! Bạn đã đoán đúng từ \n'{self.game.answer}'\nsau {self.current_row} lượt."))
+            elif self.game.is_over:
+                self.root.after(300, lambda: self.show_end_game_msg("❌ HẾT LƯỢT ❌", f"Bạn đã hết lượt đoán.\nTừ chính xác là: '{self.game.answer}'"))
 
     def show_end_game_msg(self, title, message):
         """Hộp thoại cuối màn chơi"""
