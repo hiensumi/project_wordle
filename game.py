@@ -9,7 +9,7 @@ class Game:
     PRESENT = "PRESENT"        # Đúng chữ, sai vị trí (yellow)
     ABSENT = "ABSENT"          # Sai hoàn toàn (gray)
     
-    def __init__(self, answer: str, max_guesses: int = 6):
+    def __init__(self, answer: str, max_guesses: int = 8):
         """
         Khởi tạo game với từ mục tiêu và số lượt đoán tối đa.
         

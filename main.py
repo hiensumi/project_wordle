@@ -28,8 +28,8 @@ def main():
         print(f"Lỗi lấy từ ngẫu nhiên: {e}")
         sys.exit(1)
         
-    # Khởi tạo trò chơi (giới hạn 6 lượt đoán, độ dài 6)
-    max_guesses = 6
+    # Khởi tạo trò chơi (giới hạn 8 lượt đoán, độ dài 6)
+    max_guesses = 8
     word_length = 6
     game = Game(answer, max_guesses=max_guesses)
     
