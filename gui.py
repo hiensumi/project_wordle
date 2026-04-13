@@ -81,14 +81,20 @@ class WordleGUI:
         for i in range(8):
             row_labels = []
             for j in range(6):
-                # Tạo các ô label (CTkButton không bấm được để làm ô hiện text đẹp hơn CTkLabel)
+                # Khung chữ cải tiến: Có viền (border) nét 2px chuẩn gốc
                 lbl = ctk.CTkLabel(self.grid_frame, text="", font=("Helvetica", 24, "bold"), text_color=TEXT_COLOR, 
                                    width=50, height=50, fg_color=BG_COLOR)
-                lbl.grid(row=i, column=j, padx=4, pady=4)
+                lbl.configure(corner_radius=2)
                 
-                # Để border bo góc đẹp, ta dùng một CTkFrame nhỏ bọc ngoài (hack nhẹ ở CTk)
-                # Tuy nhiên ở đây tối ưu nhất là thay label.configure
-                row_labels.append(lbl)
+                # Bọc trong Frame con để vẽ viền siêu mảnh, chống giật font CTkLabel
+                container = ctk.CTkFrame(self.grid_frame, fg_color=BG_COLOR, width=54, height=54, 
+                                         border_width=2, border_color="#3a3a3c", corner_radius=4)
+                container.grid(row=i, column=j, padx=4, pady=4)
+                container.grid_propagate(False)
+                
+                lbl.place(relx=0.5, rely=0.5, anchor="center")
+                
+                row_labels.append({"lbl": lbl, "container": container})
             self.labels.append(row_labels)
             
         # Keyboard ảo dưới đáy màn hình
@@ -144,43 +150,35 @@ class WordleGUI:
     def update_current_row(self):
         for i in range(6):
             if i < len(self.current_guess):
-                # Hiệu ứng phóng to nhẹ khi gõ (Pop effect)
-                self.labels[self.current_row][i].configure(text=self.current_guess[i], fg_color="#3a3a3c", font=("Helvetica", 28, "bold"))
-                self.root.after(50, lambda idx=i: self.labels[self.current_row][idx].configure(font=("Helvetica", 24, "bold")))
+                # Khi đang gõ phím: Bo viền sáng (#565758), nháy khung pop nhẹ
+                self.labels[self.current_row][i]["lbl"].configure(text=self.current_guess[i])
+                self.labels[self.current_row][i]["container"].configure(border_color="#565758", border_width=3)
+                
+                # Popup nhẹ (Lùi border về width 2 nhanh chóng sau 100ms)
+                self.root.after(100, lambda c=self.labels[self.current_row][i]["container"]: c.configure(border_width=2))
             else:
-                self.labels[self.current_row][i].configure(text="", fg_color=BG_COLOR)
+                # Xóa kí tự: Về trạng thái tối nguyên thủy
+                self.labels[self.current_row][i]["lbl"].configure(text="")
+                self.labels[self.current_row][i]["container"].configure(border_color="#3a3a3c", border_width=2)
 
     def show_toast(self, message):
-        """Hiển thị thông báo tạm thời phía trên màn hình"""
+        """Hiển thị thông báo Toast siêu mượt không làm rung màn hình"""
         toast = ctk.CTkLabel(self.root, text=message, fg_color=TEXT_COLOR, text_color=BG_COLOR, 
-                             corner_radius=6, font=("Helvetica", 14, "bold"), width=300, height=40)
-        toast.place(relx=0.5, rely=0.1, anchor="center")
+                             corner_radius=4, font=("Helvetica", 14, "bold"), width=0)
+        # padding inner của text
+        toast.configure(padx=20, pady=10)
+        toast.place(relx=0.5, rely=0.05, anchor="n")
         self.root.after(1500, toast.destroy)
-
-    def animate_shake(self):
-        """Hiệu ứng rung bàn chơi cảnh báo nhập sai"""
-        original_x = self.root.winfo_x()
-        original_y = self.root.winfo_y()
-        offsets = [10, -10, 8, -8, 5, -5, 0]
-        
-        def step(i=0):
-            if i < len(offsets):
-                self.root.geometry(f"+{original_x + offsets[i]}+{original_y}")
-                self.root.after(50, step, i + 1)
-                
-        step()
 
     def submit_guess(self):
         if self.game.is_over or self.is_animating: return
         
         if len(self.current_guess) != 6:
             self.show_toast("Từ bạn nhập phải có đủ 6 chữ cái!")
-            self.animate_shake()
             return
             
         if not self.manager.is_valid(self.current_guess):
             self.show_toast("Từ này không có trong từ điển tiếng Anh!")
-            self.animate_shake()
             return
             
         # Nạp từ vào logic game
@@ -191,7 +189,7 @@ class WordleGUI:
         self.animate_reveal(0, eval_result)
 
     def animate_reveal(self, col, eval_result):
-        """Hiệu ứng lật mở màu tuần tự từng ô chữ cái"""
+        """Hiệu ứng màu lật chuyển màu liền mạch mượt mà hơn"""
         if col < 6:
             char, status = eval_result[col]
             
@@ -203,8 +201,9 @@ class WordleGUI:
             else:
                 color = ABSENT_COLOR
                 
-            # Đổi màu ô Grid
-            self.labels[self.current_row][col].configure(fg_color=color, text_color=TEXT_COLOR, corner_radius=6)
+            # Đổi màu nền, đồng thời tắt viền để ô đầy đặn (border match background)
+            self.labels[self.current_row][col]["container"].configure(fg_color=color, border_width=0)
+            self.labels[self.current_row][col]["lbl"].configure(fg_color=color)
             
             # Cập nhật màu lên bàn phím ảo tương ứng ngay lập tức
             if char in self.keys:
@@ -216,8 +215,8 @@ class WordleGUI:
                 elif status == Game.ABSENT and current_bg not in [CORRECT_COLOR, PRESENT_COLOR]:
                     self.keys[char].configure(fg_color=ABSENT_COLOR, hover_color=ABSENT_COLOR)
             
-            # Gọi đệ quy hàm để lật ô kế tiếp sau 250ms
-            self.root.after(250, self.animate_reveal, col + 1, eval_result)
+            # Gọi đệ quy hàm để lật ô kế tiếp sau 150ms (Nhanh, dứt khoát hơn 250ms)
+            self.root.after(150, self.animate_reveal, col + 1, eval_result)
         else:
             # Khi đã lật đủ 6 ô:
             self.is_animating = False
