@@ -22,7 +22,7 @@ class WordleGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Wordle DSA Visual")
-        self.root.geometry("600x900")
+        self.root.geometry("680x950")
         self.root.configure(fg_color=BG_COLOR)
         self.root.resizable(False, False)
         
@@ -112,15 +112,18 @@ class WordleGUI:
         
         self.keys = {}
         if self.lang == 'vn':
-            # Bàn phím chuẩn 29 chữ cái + 5 dấu
+            # Bàn phím siêu lớn: Hiển thị 100% âm tiết Tiếng Việt
             rows = [
-                [('Ă','Ă'), ('Â','Â'), ('Đ','Đ'), ('Ê','Ê'), ('Ô','Ô'), ('Ơ','Ơ'), ('Ư','Ư')],
-                [('Q','Q'), ('E','E'), ('R','R'), ('T','T'), ('Y','Y'), ('U','U'), ('I','I'), ('O','O'), ('P','P')],
-                [('A','A'), ('S','S'), ('D','D'), ('G','G'), ('H','H'), ('K','K'), ('L','L')],
-                [('X','X'), ('C','C'), ('V','V'), ('B','B'), ('N','N'), ('M','M')],
-                [('´ (Sắc)','S'), ('` (Huyền)','F'), ('? (Hỏi)','R'), ('~ (Ngã)','X'), ('. (Nặng)','J')]
+                [(c,c) for c in ['A','Á','À','Ả','Ã','Ạ','Ă','Ắ','Ằ','Ẳ','Ẵ','Ặ']],
+                [(c,c) for c in ['Â','Ấ','Ầ','Ẩ','Ẫ','Ậ','E','É','È','Ẻ','Ẽ','Ẹ']],
+                [(c,c) for c in ['Ê','Ế','Ề','Ể','Ễ','Ệ','I','Í','Ì','Ỉ','Ĩ','Ị']],
+                [(c,c) for c in ['O','Ó','Ò','Ỏ','Õ','Ọ','Ô','Ố','Ồ','Ổ','Ỗ','Ộ']],
+                [(c,c) for c in ['Ơ','Ớ','Ờ','Ở','Ỡ','Ợ','U','Ú','Ù','Ủ','Ũ','Ụ']],
+                [(c,c) for c in ['Ư','Ứ','Ừ','Ử','Ữ','Ự','Y','Ý','Ỳ','Ỷ','Ỹ','Ỵ']],
+                [(c,c) for c in ['B','C','D','Đ','G','H','K','L','M','N','P','Q']],
+                [(c,c) for c in ['R','S','T','V','X']]
             ]
-            last_row_idx = 4
+            last_row_idx = 7
         else:
             rows = [
                 [(c,c) for c in "QWERTYUIOP"],
@@ -131,24 +134,24 @@ class WordleGUI:
             
         for r_idx, row in enumerate(rows):
             row_frame = ctk.CTkFrame(self.keyboard_frame, fg_color=BG_COLOR)
-            row_frame.pack(pady=3)
+            row_frame.pack(pady=2)
             
             if r_idx == last_row_idx:
                 btn = ctk.CTkButton(row_frame, text="ENTER", font=("Helvetica", 12, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
-                                    command=self.submit_guess, width=65, height=45, hover_color="#6c6e6f")
-                btn.pack(side="left", padx=3)
+                                    command=self.submit_guess, width=70, height=35, hover_color="#6c6e6f")
+                btn.pack(side="left", padx=2)
                 
             for display_char, internal_char in row:
                 btn = ctk.CTkButton(row_frame, text=display_char, font=("Helvetica", 14, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
-                                    width=40 if len(display_char) == 1 else 75, 
-                                    height=45, command=lambda c=internal_char: self.type_char(c), hover_color="#6c6e6f")
+                                    width=38 if self.lang == 'vn' else 40, height=35 if self.lang == 'vn' else 45, 
+                                    command=lambda c=internal_char: self.type_char(c), hover_color="#6c6e6f")
                 btn.pack(side="left", padx=2)
                 self.keys[internal_char] = btn
                 
             if r_idx == last_row_idx:
-                btn = ctk.CTkButton(row_frame, text="⌫", font=("Helvetica", 16), fg_color=KEY_BG, text_color=TEXT_COLOR, 
-                                    command=self.delete_char, width=50, height=45, hover_color="#6c6e6f")
-                btn.pack(side="left", padx=3)
+                btn = ctk.CTkButton(row_frame, text="⌫", font=("Helvetica", 14), fg_color=KEY_BG, text_color=TEXT_COLOR, 
+                                    command=self.delete_char, width=60, height=35, hover_color="#6c6e6f")
+                btn.pack(side="left", padx=2)
 
     def handle_keypress(self, event):
         """Xử lý sự kiện khi gõ bàn phím vật lý"""
