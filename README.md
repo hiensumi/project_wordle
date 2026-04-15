@@ -1,47 +1,54 @@
-# 🎮 Đồ án: Trò chơi Đoán chữ - Wordle (Phiên bản 6 Chữ cái)
+﻿#  Đồ án: Trò chơi Đoán chữ - Wordle (Đa Ngôn Ngữ)
 
-Đồ án môn **Cấu trúc Dữ liệu và Thuật toán (DSA)**: Tái hiện game Wordle với **6 chữ cái** và **8 lượt đoán**, hỗ trợ cả CLI và GUI.
-
----
-
-## 🌟 Tính năng
-- **Từ điển phân cấp**: ~30,000 từ tiếng Anh chia 3 độ khó (Dễ/Trung Bình/Khó) dựa trên tần suất.
-- **Giao diện đa dạng**: GUI Dark Mode (`customtkinter`) thiết kế hiện đại, nhiều hoạt ảnh (animation), và chế độ CLI nguyên bản trên Terminal.
+Đồ án môn **Cấu trúc Dữ liệu và Thuật toán (DSA)**: Tái hiện game Wordle với **phiên bản Tiếng Anh (6 chữ cái)** và **phiên bản Tiếng Việt (1 Tiếng - Blind Length)**.
 
 ---
 
-## 🧠 Áp dụng DSA
-
-1. **`Set` (Hash Table) cho Từ điển**:
-   - Lưu trữ hơn 30,000 từ, tiêu tốn chỉ **~7.3 MB RAM**.
-   - Tra cứu từ hợp lệ với độ phức tạp **$\mathcal{O}(1)$**, tối ưu vượt trội so với tìm kiếm trong mảng thông thường.
-
-2. **Thuật toán vòng lặp 2 bước (Two-pass Array Iteration)**:
-   - Xử lý chính xác các trường hợp trùng chữ cái (ví dụ: đoán thiếu/thừa từ có 2 chữ P), tránh gán sai màu Xanh lá/Vàng.
-   - Duyệt vòng 1 để tìm khớp 100% (Exact Match) và vòng 2 để tìm khớp lệch (Partial Match). Độ phức tạp **$\mathcal{O}(L)$** (với $L=6$ là độ dài từ).
+##  Tính năng Nổi bật
+- **Chế độ Ngoại Ngữ đa dạng**: 
+  - **Tiếng Anh**: Đoán từ 6 chữ cái, phân thành 3 cấp độ (Dễ/Trung Bình/Khó) từ bộ 30,000 từ.
+  - **Tiếng Việt (1 Tiếng)**: Chế độ "Độ dài ẩn" (Blind length) cực độc đáo. Đoán từ 1 âm tiết (tối đa 7 ký tự). Không giới hạn độ dài từ nhập vào phải bằng từ gốc.
+- **Bàn phím Ảo Thuần Việt**: 
+  - Bàn phím được thiết kế lại riêng cho Tiếng Việt (loại bỏ W, F, J, Z).
+  - Có hàng phím nguyên âm mở rộng (`Ă, Â, Đ, Ê, Ô, Ơ, Ư`) và 5 phím Dấu riêng biệt để hỗ trợ gõ Telex trực tiếp trên giao diện bằng chuột.
+  - Tích hợp bộ gõ **bogo** xử lý phím bấm vật lý thời gian thực.
+- **Giao diện hiện đại**: GUI Dark Mode (`customtkinter`) với hiệu ứng lật mở màu sắc mượt mà, viền bo tròn tinh tế bắt sáng bàn phím.
 
 ---
 
-## 🚀 Cài đặt & Sử dụng
+##  Áp dụng DSA & Cấu trúc Dữ liệu
 
-Yêu cầu: **Python 3.9+**
+1. **`Set` (Hash Table) thay vì `B-Tree` cho Từ điển**:
+   - Dữ liệu từ vựng (~30,000 từ Tiếng Anh, 6,256 từ Tiếng Việt) được nạp vào memory dưới dạng Hash Set.
+   - **Phân tích độ phức tạp**: Tra cứu từ mất $\mathcal{O}(1)$. Memory tiêu tốn chỉ **~7 MB RAM**, tối ưu vượt trội so với sử dụng Cây B-Tree (chiếm >100MB Memory do tính chất lưu trữ Object/Pointer của Python) cho bài toán chỉ mang tính chất Read-only này.
+
+2. **Thuật toán Đánh giá Lệch độ dài (Blind Length - Two-pass Array)**:
+   - Xử lý các trường hợp từ nhập vào dài hơn hoặc ngắn hơn từ đích (ví dụ: đích "NGHIÊNG", nhập "THƯƠNG").
+   - Duyệt vòng 1 bằng vòng lặp giới hạn `min(len(guess), len(answer))` để tìm khớp 100% (Xanh lá).
+   - Duyệt vòng 2 xử lý Partial Match (Màu vàng) kết hợp với từ điển tần suất chữ cái, giúp không bị gán dư màu vàng khi từ bị trùng lặp chữ. Độ phức tạp duy trì ở ngưỡng an toàn $\mathcal{O}(L)$.
+
+---
+
+##  Cài đặt & Sử dụng
+
+Yêu cầu môi trường: **Python 3.9+**
 
 ```bash
-# Cài đặt thư viện yêu cầu (dùng cho GUI)
-pip install -r requirements.txt
+# Cài đặt thư viện yêu cầu (gui và gõ tiếng Việt)
+pip install customtkinter bogo
 
 # Chạy bản đồ họa (GUI)
 python gui.py
 
-# Hoặc chạy bản dòng lệnh (CLI)
+# Hoặc chạy bản dòng lệnh (CLI - Tiếng Anh)
 python main.py
 ```
 
 ---
 
-## 📂 Tổ chức mã nguồn
-*   `gui.py` / `main.py`: File khởi chạy tương ứng cho GUI và CLI.
-*   `game.py`: Core logic (bộ chấm điểm, quản lý trạng thái, vòng chơi).
-*   `ui.py`: Vẽ giao diện màu cho phiên bản Terminal.
-*   `word_manager.py` / `categorize.py`: Script đọc, phân loại và quản lý từ điển.
-*   `words_*.txt`: Tập dữ liệu từ vựng cục bộ.
+##  Tổ chức Mã nguồn
+*   `gui.py`: Giao diện chính (CTk), tích hợp xử lý bàn phím vật lý/ảo và buffer Telex.
+*   `game.py`: Core logic chấm điểm mảng hai lớp, quản lý biến trạng thái (hỗ trợ mismatched length).
+*   `word_manager.py`: Script đọc, phân loại cấp độ, và xử lý chuyển đổi giữa tập `vn_words` / `en_words`.
+*   `bogo_demo.py` / `fetch_vn_words.py`: Các script phụ trợ tải và demo xử lý tiếng Việt.
+*   `words_*.txt`: Tập dữ liệu chuẩn hóa, lọc nhiễu âm tiết.
