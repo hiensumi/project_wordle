@@ -7,17 +7,8 @@ from ui import UI
 
 def main():
     """
-    Điểm bắt đầu của ứng dụng Wordle (Môi trường Console).
-    
-    Hàm này chịu trách nhiệm khởi tạo đối tượng WordManager để nạp từ điển,
-    thu nhận lựa chọn độ khó từ người chơi thông qua giao diện UI, thiết lập 
-    logic cốt lõi qua đối tượng Game và duy trì vòng lặp trò chơi chính.
-    Vòng lặp sẽ tiếp tục cho đến khi trò chơi kết thúc (thắng hoặc hết lượt) 
-    hoặc khi người dùng yêu cầu thoát bằng từ khóa 'QUIT' hay 'EXIT'.
-    
-    Raises:
-        SystemExit: Thoát chương trình nếu không tìm thấy file từ điển, 
-                    hoặc khi người dùng chủ động thoát trò chơi.
+    Điểm bắt đầu của ứng dụng Wordle (cốt lõi vòng lặp chính của trò chơi).
+    Chịu trách nhiệm khởi tạo manager, game logic và xử lý thông điệp gửi tới UI.
     """
     try:
         # Thư mục gốc dự án
