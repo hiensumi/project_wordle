@@ -52,3 +52,16 @@ python main.py
 *   `word_manager.py`: Script đọc, phân loại cấp độ, và xử lý chuyển đổi giữa tập `vn_words` / `en_words`.
 *   `bogo_demo.py` / `fetch_vn_words.py`: Các script phụ trợ tải và demo xử lý tiếng Việt.
 *   `words_*.txt`: Tập dữ liệu chuẩn hóa, lọc nhiễu âm tiết.
+
+---
+
+##  Tuyên bố Bản quyền & Tham khảo (Citations)
+
+Dự án này sử dụng một số thư viện mã nguồn mở có sẵn. Theo đúng quy định của đề bài đồ án, toàn bộ thuật toán liên quan đến CTDL & TT (ví dụ: HashSet, Two-pass Array Match) đều được sinh viên triển khai toàn bộ từ đầu.
+
+**Các thư viện UI và mã dựng sẵn đã sử dụng:**
+1. **`customtkinter`**: Thư viện hỗ trợ vẽ giao diện đồ hoạ hiện đại (Win32/Tkinter) cho Python. [Link GitHub](https://github.com/TomSchimansky/CustomTkinter)
+2. **`bogo`**: Thư viện xử lý chuỗi Telex siêu tốc phục vụ bộ máy nhập liệu Tiếng Việt theo thời gian thực tại `gui.py`. Tác giả: Trung Ngo. [Link GitHub](https://github.com/BoGoEngine/bogo-python)
+3. **Từ điển dữ liệu**: 
+   - Tiếng Anh: Tham khảo Wordle Dictionary cơ bản.
+   - Tiếng Việt: Trích xuất xử lý từ `vinlp` và các Github Gists từ điển thông dụng, lọc tay lại bằng regex cho ra `words_vn.txt`.

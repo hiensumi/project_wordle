@@ -19,7 +19,21 @@ BORDER_COLOR = "#3a3a3c"
 KEY_BG = "#818384"
 
 class WordleGUI:
+    """
+    Lớp quản lý Giao diện Người dùng Đồ họa (GUI) cho trò chơi Wordle.
+    
+    Lớp này sử dụng thư viện customtkinter để vẽ và cập nhật giao diện, 
+    nhận thông tin đầu vào từ người chơi (thông qua bàn phím thực hoặc phím ảo),
+    và tương tác với lõi logic Game. Ngoài ra, lớp đóng vai trò cầu nối
+    giữa kiểm tra từ điển và quản lý trạng thái trò chơi (WordManager).
+    """
     def __init__(self, root):
+        """
+        Khởi tạo giao diện WordleGUI.
+        
+        Args:
+            root (customtkinter.CTk): Cửa sổ gốc của ứng dụng giao diện.
+        """
         self.root = root
         self.root.title("Wordle DSA Visual")
         self.root.geometry("550x800")
@@ -38,7 +52,14 @@ class WordleGUI:
         self.show_difficulty_selection()
 
     def show_difficulty_selection(self):
-        """Màn hình chọn cấp độ đầu tiên bằng GUI"""
+        """
+        Khởi tạo và hiển thị màn hình chọn độ khó trước khi trò chơi bắt đầu.
+        
+        Phương thức này vẽ khung chứa (Frame) với tiêu đề trò chơi và các nút 
+        nhấn tương ứng với ba độ khó: Dễ, Trung bình, Khó cho tiếng Anh, và 
+        độ khó tương đương cho tiếng Việt. Giao diện này sẽ bị hủy bỏ (destroy) 
+        khi người dùng thiết lập xong lựa chọn.
+        """
         self.setup_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
         self.setup_frame.pack(expand=True, fill='both')
         
@@ -53,7 +74,18 @@ class WordleGUI:
         ctk.CTkButton(self.setup_frame, text="Trung bình (Medium)", font=("Helvetica", 14, "bold"), fg_color=PRESENT_COLOR, hover_color="#968331", 
                       text_color=TEXT_COLOR, command=lambda: self.start_game('medium', lang='en'), height=45, width=200).pack(pady=10)
                   
-        ctk.CTkButton(self.setup_frame, text="Khó (Hard)", font=("Helvetica", 14, "bold"), fg_color=ABSENT_COLOR, hover_color="#2b2b2d", 
+        ctk
+        Khởi tạo logic trò chơi và thiết lập bàn cờ (board) dựa trên ngôn ngữ & mức khó.
+        
+        Xóa màn hình chọn độ khó hiện tại, yêu cầu WordManager chọn một từ ngẫu 
+        nhiên dựa theo độ khó, sau đó khởi tạo đối tượng Game tương ứng với từ này.
+        Khung lưới giao diện và bàn phím tương tác sau đó được xây dựng thông qua
+        phương thức `build_ui()`.
+        
+        Args:
+            difficulty (str): Từ khóa chỉ định độ khó ('easy', 'medium', 'hard').
+            lang (str, optional): Ký hiệu ngôn ngữ ('en' hoặc 'vn'). Mặc định là 'en'.
+        d)", font=("Helvetica", 14, "bold"), fg_color=ABSENT_COLOR, hover_color="#2b2b2d", 
                       text_color=TEXT_COLOR, command=lambda: self.start_game('hard', lang='en'), height=45, width=200).pack(pady=10)
                       
         ctk.CTkButton(self.setup_frame, text="Tiếng Việt (1 Tiếng)", font=("Helvetica", 14, "bold"), fg_color="#4B0082", hover_color="#3A006F", 
@@ -66,6 +98,12 @@ class WordleGUI:
         self.lang = lang
         self.answer = self.manager.get_random_word(difficulty, lang)
         self.game = Game(self.answer, max_guesses=8)
+        
+        Xây dựng khung lưới bảng chơi và bố trí bàn phím ảo (virtual keyboard).
+        
+        Tạo động lưới chứa các nhãn chữ cái theo chiều dài cột (dựa trên giới hạn 
+        chữ cái của màn chơi) và tổng số hàng (đại diện cho số lượt đoán định mức 8).
+        Bàn phím ảo được xây dựng với phím theo bố cục QWERTY hoặc tiếng Việt.
         
         self.current_guess = ""
         self.hidden_buffer = ""
@@ -134,7 +172,12 @@ class WordleGUI:
             row_frame.pack(pady=3)
             
             if r_idx == last_row_idx:
-                btn = ctk.CTkButton(row_frame, text="ENTER", font=("Helvetica", 12, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
+           
+        Xử lý sự kiện nhấn phím trên bàn phím vật lý từ hệ thống.
+        
+        Args:
+            event (tkinter.Event): Đối tượng biểu diễn sự kiện bàn phím.
+        text="ENTER", font=("Helvetica", 12, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
                                     command=self.submit_guess, width=65, height=45, hover_color="#6c6e6f")
                 btn.pack(side="left", padx=3)
                 
@@ -163,6 +206,13 @@ class WordleGUI:
             self.submit_guess()
 
     def type_char(self, char):
+        """
+        Xử lý khi người dùng nhập một chữ cái mới từ bàn phím (ảo hoặc vật lý).
+        Hỗ trợ cập nhật lưới UI và xử lý gõ chuẩn tiếng Việt thông qua thư viện Bogo.
+        
+        Args:
+            char (str): Kí tự vừa được người dùng nhập (chuỗi có độ dài 1).
+        """
         if self.game.is_over or self.is_animating: return
         if self.lang == 'vn':
             new_buffer = self.hidden_buffer + char.lower()
@@ -177,6 +227,10 @@ class WordleGUI:
                 self.update_current_row()
 
     def delete_char(self):
+        """
+        Xóa chữ cái cuối cùng trong từ đang được đoán hiện tại.
+        Hỗ trợ quản lý lại bộ đệm gõ Telex nếu ngôn ngữ đang chơi là tiếng Việt.
+        """
         if self.game.is_over or self.is_animating: return
         if self.lang == 'vn':
             if len(self.hidden_buffer) > 0:
@@ -185,6 +239,12 @@ class WordleGUI:
                 self.update_current_row()
         else:
             if len(self.current_guess) > 0:
+        """
+        Đồng bộ giao diện hàng lưới người dùng đang đoán với bộ đệm `current_guess`.
+        
+        Trường hợp người chơi bổ sung ký tự: Nền nút được cấu hình nổi bật (pop-up).
+        Ngược lại, nếu xóa thì ô ký tự trở về màu tối nguyên thủy.
+        """
                 self.current_guess = self.current_guess[:-1]
                 self.update_current_row()
 
@@ -197,7 +257,23 @@ class WordleGUI:
                 
                 # Popup nhẹ (Lùi border về width 2 nhanh chóng sau 100ms)
                 self.root.after(100, lambda c=self.labels[self.current_row][i]["container"]: c.configure(border_width=2))
-            else:
+           
+        Hiển thị một thông báo nổi (Toast message) trên UI đồ họa.
+        
+        Thông báo được dùng để báo lỗi ngữ pháp, không đủ độ dài, từ không tồn tại, v.v.
+        Một nhãn (label) tạm thời sẽ xuất hiện trên màn hình và tự động biến mất 
+        sau một thời gian định sẵn (1.5 giây).
+        
+        Args:
+            message (str): Nội dung thông báo hiển thị cho người dùng.
+        """
+        Chấp nhận lượt đoán từ người chơi và truyền cho Game API để xử lý.
+        
+        Bao bọc các bước: Ngăn chặn nộp từ sai độ dài, kiểm tra sự tồn tại trong 
+        từ điển với sự trợ giúp của WordManager, tính toán màu sắc trả về.
+        Tiến hành hiệu ứng giao diện nếu tất cả đều được thông qua.
+        """
+        
                 # Xóa kí tự: Về trạng thái tối nguyên thủy
                 self.labels[self.current_row][i]["lbl"].configure(text="")
                 self.labels[self.current_row][i]["container"].configure(border_color="#3a3a3c", border_width=2)
@@ -232,6 +308,17 @@ class WordleGUI:
         self.animate_reveal(0, eval_result)
 
     def get_base_char(self, char):
+        """
+        Chuẩn hóa chữ cái có dấu để có thể tô màu tương ứng trên bàn phím ảo.
+        Tiếng Việt sử dụng bảng dấu phong phú, cần ánh xạ lại kí tự nguyên mẫu (base)
+        để màu sắc phản chiếu đúng theo luật chơi.
+        
+        Args:
+            char (str): Ký tự đơn được truyền từ máy tính.
+            
+        Returns:
+            str: Chữ cái in hoa nguyên bản không dấu.
+        """
         if self.lang == 'en': return char
         mapping = {
             'Á': 'A', 'À': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
@@ -250,7 +337,18 @@ class WordleGUI:
         return mapping.get(char, char)
 
     def animate_reveal(self, col, eval_result):
-        """Hiệu ứng màu lật chuyển màu liền mạch mượt mà hơn"""
+        """
+        Hệ thống giả lập hoạt ảnh lật từng ô vuông chữ cái để thông báo trạng thái.
+        
+        Thực hiện gọi đệ quy tuyến tính bằng UI After Timer để tạo cảm giác lật mở (flip).
+        Mỗi lần cập nhật trạng thái màu cho ô ở cột tương ứng (đúng, sai, xám), 
+        giao diện bàn phím trực tuyến cũng được áp dụng màu nền song song.
+        
+        Args:
+            col (int): Chỉ mục cột chữ cái trên hàng hiện tại đang lật.
+            eval_result (List[Tuple[str, str]]): List tuple chứa đánh giá 
+                từ Game: (màu, trạng thái) của các vị trí từ vựng người dùng đưa vào.
+        """
         if col < len(eval_result):
             char, status = eval_result[col]
             
@@ -283,7 +381,15 @@ class WordleGUI:
             # Khi đã lật đủ chiều dài của từ:
             self.is_animating = False
             self.current_row += 1
-            self.current_guess = ""
+           
+        Hiển thị hộp thoại kết thúc lượt chơi Game Over.
+        Hỏi người chơi xem có muốn chơi tiếp ván thứ hai với độ khó tương tự không.
+        
+        Args:
+            title (str): Tiêu đề hộp thoại thông báo.
+            message (str): Thông điệp truyền tải sau trận, thường bao gồm
+                đáp án hoặc/và số lượt để thắng cuộc.
+        "
             if self.lang == 'vn':
                 self.hidden_buffer = ""
             

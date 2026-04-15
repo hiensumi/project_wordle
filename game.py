@@ -1,7 +1,11 @@
 class Game:
     """
-    Lớp quản lý trạng thái trò chơi Wordle.
-    Theo dõi đáp án, lượt chơi và đánh giá suy luận của người dùng.
+    Lớp quản lý logic tổng thể và trạng thái trò chơi Wordle liên tục.
+    
+    Lưu trữ đáp án (Answer) và theo dõi sát sao tất cả tiến trình lặp vòng lặp đoán 
+    (Guesses) của người chơi hiện tại, tiến hành đánh giá chi tiết (Evaluation) mức độ
+    chính xác của chữ theo phân vùng vị trí. Hoạt động trên môi trường thuần không 
+    phụ thuộc vào View/UI.
     """
     
     # Các trạng thái của một chữ cái sau khi kiểm tra
@@ -11,11 +15,11 @@ class Game:
     
     def __init__(self, answer: str, max_guesses: int = 8):
         """
-        Khởi tạo game với từ mục tiêu và số lượt đoán tối đa.
+        Đóng gói một ván chơi (phiên bản trò chơi mới) sử dụng từ mục tiêu định mức.
         
         Args:
-            answer (str): Từ cần đoán (đáp án).
-            max_guesses (int): Số lượt đoán tối đa.
+            answer (str): Đáp án nguyên bản bắt buộc phải đoán.
+            max_guesses (int): Giới hạn lượng lần phán đoán thất bại của user. Mặc định: 8.
         """
         self.answer = answer.upper()
         self.max_guesses = max_guesses
@@ -26,22 +30,26 @@ class Game:
 
     def get_remaining_guesses(self) -> int:
         """
-        Lấy số lượt đoán còn lại.
+        Truy xuất số lượt đoán còn lại nhằm theo dõi quyền hạn của Client.
+        
+        Returns:
+            int: Con số còn lại.
         """
         return self.max_guesses - len(self.guesses)
-
-    def evaluate_guess(self, guess: str) -> list[tuple[str, str]]:
-        """
-        Đánh giá một từ được đoán so với đáp án.
-        Mọi ký tự đều được biểu thị trạng thái (Tồn tại, Đúng, Sai).
+Công thức duyệt từng kí tự đoán so với từ gốc xác định kết quả Wordle Game:
         
-        Thuật toán Wordle:
-        1. Đánh dấu tất cả các chữ cái "Đúng" (màu Xanh)
-        2. Dựa trên số lượng vị trí còn lại ở đáp án, đánh dấu chữ là "Sắp đúng" (màu Vàng)
-        3. Các từ không khớp còn lại là "Sai" (màu Xám)
+        Quy luật phân quyền ưu tiên:
+        1. (Pass 1): Kiểm tra ký tự nào có nội tại và độ trùng chuẩn xác như mong muốn => trạng thái CORRECT.
+        2. (Pass 2): Với phần còn sót lại, đánh số đếm tìm kiếm cho từng kí tự dư/ lệch dòng ở Answer,
+                     khi tìm thấy một phân tử, ta khoanh vùng là PRESENT, nếu không còn thì coi như ABSENT.
+        
+        Thuật toán này giúp giải quyết việc nhập lặp thừa ký tự (VD: "APPLE" đáp án là "PEARL").
         
         Args:
-            guess (str): Từ mà người dùng đoán.
+            guess (str): Từ vựng chuỗi con phán đoán trong lần submit hiện tại.
+            
+        Returns:
+            list[tuple[str, str]]: Mảng chuỗi trạng thái kết hợp theo từng vị trí (Ký tự, Lớp Enum màu)
             
         Returns:
             list[tuple[str, str]]: Danh sách chứa Tuple gồm kí tự và trạng thái của nó.
@@ -68,13 +76,23 @@ class Game:
                 # Đánh dấu là đã dùng để không báo vàng 2 lần cho 1 chữ có 1 lần xuất hiện
                 answer_chars[answer_chars.index(char)] = None
                 
-        return [(item[0], item[1]) for item in result]
-
-    def make_guess(self, guess: str) -> list[tuple[str, str]]:
-        """
-        Thực hiện một lượt đoán và cập nhật trạng thái game.
+        Giao diện API thao tác thực tế dành cho người dùng nạp một chuỗi để tham gia đoán game.
+        
+        Phương thức không chỉ gọi tới máy học thuật toán `evaluate_guess` tính điểm mà 
+        còn tự động duy trì ghi chép (`history log`), cập nhật từ điển các chữ 
+        đã tiêu thụ (`letter_status`). Nếu người chơi cạn sạch giới hạn hoặc 
+        hoàn thành việc giải đố thành tựu thì set giá trị boolean `is_won` và `is_over`.
         
         Args:
+            guess (str): Chuỗi người dùng gõ vào và mong muốn tìm được nghiệm hợp lệ.
+            
+        Raises:
+            ValueError: Exception sinh ra khi hệ thống nhận được request chơi lúc bàn 
+            đã `is_over = True`.
+            
+        Returns:
+            list[tuple[str, str]]: Dữ liệu mảng sau khi qua đánh giá logic, chuyển lại 
+            cho luồng giao diện để hiển thị phản hồi từ trò chơi
             guess (str): Từ đoán của người chơi.
             
         Returns:

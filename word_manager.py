@@ -3,12 +3,20 @@ import os
 
 class WordManager:
     """
-    Quản lý danh sách các từ hợp lệ cho trò chơi Wordle.
-    Đọc từ file text và cung cấp các hàm kiểm tra từ hợp lệ hoặc chọn từ ngẫu nhiên.
+    Quản lý danh sách các từ vựng hợp lệ làm dữ liệu cho trò chơi Wordle.
+    
+    Lớp này đảm nhận việc đọc toàn bộ bộ từ điển (dictionaries) từ hệ thống tập tin 
+    địa phương thành các cấu trúc Set trong Python để gia tăng ưu thế phân tích Big-O (O(1)) 
+    khi kiểm tra hợp chuẩn (Validity). Cũng cung cấp khả năng điều phối độ phức tạp ngẫu nhiên 
+    khi bắt đầu lượt mới.
     """
     def __init__(self, base_dir: str):
         """
-        Khởi tạo WordManager bằng cách đọc danh sách từ từ file và phân loại độ khó.
+        Khởi tạo thực thể WordManager, tự động định tuyến và phân loại danh sách.
+        
+        Args:
+            base_dir (str): Thư mục gốc chứa các tệp văn bản từ vựng tĩnh 
+                            (words.txt, words_easy.txt, v.v.).
         """
         self.words = set()
         self.easy_words = set()
@@ -20,10 +28,29 @@ class WordManager:
         self._load_words()
 
     def _read_file(self, filename: str, is_vn: bool = False) -> set:
-        """Đọc và trả về danh sách từ từ một file cụ thể."""
+        """
+        Đọc và phân tách danh sách từ khóa hợp lệ từ một tệp tin xác định.
+        
+        Dữ liệu được làm sạch bằng `.strip()`, đưa về chế độ In Hoàn toàn (`upper()`)
+        nhằm tránh vi phạm ngữ nghĩa. Quá trình kiểm định cũng được triển khai 
+        nhằm đảm bảo độ dài thiết lập (6 chữ cái đối với tiếng Anh, từ 1 tới 7 với tiếng Việt).
+        
+        Args:
+            filename (str): Tên file muốn nạp (vd: 'words_easy.txt').
+            is_vn (bool): Cờ quy định nếu là bộ từ vựng tiếng Việt. Mặc định là False.
+            
+        Returns:
+            set: Tập hợp (hash-set) bao gồm tất cả các từ vựng thỏa mãn điều kiện tệp.
+        """
         filepath = os.path.join(self.base_dir, filename)
         words_set = set()
-        if os.path.exists(filepath):
+        if 
+        Phương thức hỗ trợ (helper logic) đọc đồng loạt đa nguồn tệp từ điển.
+        
+        Liên tục gọi _read_file để lôi kéo dữ liệu lên RAM phân theo 
+        tiếng Anh (3 mức khó khăn) và tiếng Việt (1 chế độ tổng hợp).
+        Giả phòng rủi ro: Nếu độ khó nhỏ hơn không tìm thấy sẽ chèn bộ master words.txt.
+        
             with open(filepath, 'r', encoding='utf-8') as f:
                 for line in f:
                     word = line.strip().upper()
@@ -42,6 +69,29 @@ class WordManager:
         self.medium_words = self._read_file('words_medium.txt')
         self.hard_words = self._read_file('words_hard.txt')
         self.vn_words = self._read_file('words_vn.txt', is_vn=True)
+        
+        Tra cứu O(1) chữ cái dự đoán (guess) với bộ nhớ trong từ điển chính.
+        
+        Args:
+            word (str): Từ cần chuẩn hóa và kiểm tra.
+            lang (str): Nhãn hiệu ngôn ngữ của môi trường, 'vn' đổi sang tiếng Việt.
+           
+        Trích xuất thông minh một kết cấu đáp án (chọn ngẫu nhiên) cho một lượt đầu mới.
+        
+        Sử dụng cơ chế random.choice qua một tập ánh xạ từ danh sách theo khó khăn chỉ định.
+        
+        Args:
+            difficulty (str): Phân lớp lấy dữ liệu ('easy', 'medium', 'hard'). Mặc định 'medium'.
+            lang (str): Dòng ngôn ngữ ('en' hoặc 'vn'). Mặc định 'en'.
+            
+        Raises:
+            ValueError: Từ điển trống (có thể do lỗi đọc file nội tại rỗng).
+            
+        Returns:
+            str: Đáp án dưới định dạng chuẩn hoa in hoa cho một bản Game mới nhất.
+        
+        Returns:
+            bool: True nếu là một từ hợp ngữ pháp từ điển hiện hành, False nếu ngược lại.
         
         if not self.easy_words: self.easy_words = self.words.copy()
         if not self.medium_words: self.medium_words = self.words.copy()
