@@ -22,7 +22,7 @@ class WordleGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Wordle DSA Visual")
-        self.root.geometry("550x800")
+        self.root.geometry("600x900")
         self.root.configure(fg_color=BG_COLOR)
         self.root.resizable(False, False)
         
