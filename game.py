@@ -47,19 +47,17 @@ class Game:
             list[tuple[str, str]]: Danh sách chứa Tuple gồm kí tự và trạng thái của nó.
         """
         guess = guess.upper()
-        if len(guess) != len(self.answer):
-            raise ValueError(f"Độ dài từ đoán phải là {len(self.answer)}")
             
         result = [[char, self.ABSENT] for char in guess]
         answer_chars = list(self.answer)
         
         # Bước 1: Kiểm tra đúng vị trí (CORRECT)
-        for i in range(len(guess)):
+        for i in range(min(len(guess), len(self.answer))):
             if guess[i] == answer_chars[i]:
                 result[i][1] = self.CORRECT
                 answer_chars[i] = None  # Đánh dấu đã dùng
                 
-        # Bước 2: Kiểm tra đúng chữ sai vị trí (PRESENT)
+        # Bước 2: Kiểm tra đúng chữ sai vị trí (PRESENT) dư và sai vị trí hoàn toàn (ABSENT)
         for i in range(len(guess)):
             if result[i][1] == self.CORRECT:
                 continue

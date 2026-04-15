@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 import os
+import bogo
 from word_manager import WordManager
 from game import Game
 
@@ -44,25 +45,31 @@ class WordleGUI:
         ctk.CTkLabel(self.setup_frame, text="WORDLE 6+", font=("Helvetica", 42, "bold"), text_color=TEXT_COLOR).pack(pady=(120, 20))
         ctk.CTkLabel(self.setup_frame, text="Đồ án môn DSA (Cấu trúc dữ liệu)", font=("Helvetica", 14), text_color=KEY_BG).pack(pady=(0, 40))
         
-        ctk.CTkLabel(self.setup_frame, text="Vui lòng chọn độ khó:", font=("Helvetica", 16, "bold"), text_color=TEXT_COLOR).pack(pady=10)
+        ctk.CTkLabel(self.setup_frame, text="Vui lòng chọn chế độ:", font=("Helvetica", 16, "bold"), text_color=TEXT_COLOR).pack(pady=10)
         
         ctk.CTkButton(self.setup_frame, text="Dễ (Easy)", font=("Helvetica", 14, "bold"), fg_color=CORRECT_COLOR, hover_color="#43723e", 
-                      text_color=TEXT_COLOR, command=lambda: self.start_game('easy'), height=45, width=200).pack(pady=10)
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('easy', lang='en'), height=45, width=200).pack(pady=10)
                   
         ctk.CTkButton(self.setup_frame, text="Trung bình (Medium)", font=("Helvetica", 14, "bold"), fg_color=PRESENT_COLOR, hover_color="#968331", 
-                      text_color=TEXT_COLOR, command=lambda: self.start_game('medium'), height=45, width=200).pack(pady=10)
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('medium', lang='en'), height=45, width=200).pack(pady=10)
                   
         ctk.CTkButton(self.setup_frame, text="Khó (Hard)", font=("Helvetica", 14, "bold"), fg_color=ABSENT_COLOR, hover_color="#2b2b2d", 
-                      text_color=TEXT_COLOR, command=lambda: self.start_game('hard'), height=45, width=200).pack(pady=10)
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('hard', lang='en'), height=45, width=200).pack(pady=10)
+                      
+        ctk.CTkButton(self.setup_frame, text="Tiếng Việt (1 Tiếng)", font=("Helvetica", 14, "bold"), fg_color="#4B0082", hover_color="#3A006F", 
+                      text_color=TEXT_COLOR, command=lambda: self.start_game('medium', lang='vn'), height=45, width=200).pack(pady=10)
 
-    def start_game(self, difficulty):
+    def start_game(self, difficulty, lang='en'):
         """Khởi tạo Board cho Game sau khi chọn độ khó"""
         self.setup_frame.destroy()
         
-        self.answer = self.manager.get_random_word(difficulty)
+        self.lang = lang
+        self.answer = self.manager.get_random_word(difficulty, lang)
         self.game = Game(self.answer, max_guesses=8)
         
         self.current_guess = ""
+        self.hidden_buffer = ""
+        self.columns = 7 if self.lang == 'vn' else 6
         self.current_row = 0
         self.is_animating = False
         
@@ -71,16 +78,20 @@ class WordleGUI:
         
     def build_ui(self):
         """Xây dựng khung lưới bảng chơi và bàn phím"""
-        ctk.CTkLabel(self.root, text="WORDLE", font=("Helvetica", 28, "bold"), text_color=TEXT_COLOR).pack(pady=(20, 10))
-        
+        ctk.CTkLabel(self.root, text="WORDLE", font=("Helvetica", 28, "bold"), text_color=TEXT_COLOR).pack(pady=(20, 5))
+        if self.lang == 'vn':
+            ctk.CTkLabel(self.root, text="Đoán từ gồm 1 tiếng, độ dài ẩn (max 7 chữ)", font=("Helvetica", 14), text_color=TEXT_COLOR).pack(pady=(0, 10))
+        else:
+            ctk.CTkLabel(self.root, text="", font=("Helvetica", 14)).pack(pady=(0, 10))
+            
         # Grid chữ cái
         self.grid_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
-        self.grid_frame.pack(pady=10)
+        self.grid_frame.pack(pady=5)
         
         self.labels = []
         for i in range(8):
             row_labels = []
-            for j in range(6):
+            for j in range(self.columns):
                 # Bọc trong Frame con để vẽ viền siêu mảnh, chống giật font CTkLabel
                 container = ctk.CTkFrame(self.grid_frame, fg_color=BG_COLOR, width=54, height=54, 
                                          border_width=2, border_color="#3a3a3c", corner_radius=4)
@@ -97,26 +108,44 @@ class WordleGUI:
             
         # Keyboard ảo dưới đáy màn hình
         self.keyboard_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
-        self.keyboard_frame.pack(pady=30)
+        self.keyboard_frame.pack(pady=20)
         
         self.keys = {}
-        rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
+        if self.lang == 'vn':
+            # Bàn phím chuẩn 29 chữ cái + 5 dấu
+            rows = [
+                [('Ă','Ă'), ('Â','Â'), ('Đ','Đ'), ('Ê','Ê'), ('Ô','Ô'), ('Ơ','Ơ'), ('Ư','Ư')],
+                [('Q','Q'), ('E','E'), ('R','R'), ('T','T'), ('Y','Y'), ('U','U'), ('I','I'), ('O','O'), ('P','P')],
+                [('A','A'), ('S','S'), ('D','D'), ('G','G'), ('H','H'), ('K','K'), ('L','L')],
+                [('X','X'), ('C','C'), ('V','V'), ('B','B'), ('N','N'), ('M','M')],
+                [('´ (Sắc)','S'), ('` (Huyền)','F'), ('? (Hỏi)','R'), ('~ (Ngã)','X'), ('. (Nặng)','J')]
+            ]
+            last_row_idx = 4
+        else:
+            rows = [
+                [(c,c) for c in "QWERTYUIOP"],
+                [(c,c) for c in "ASDFGHJKL"],
+                [(c,c) for c in "ZXCVBNM"]
+            ]
+            last_row_idx = 2
+            
         for r_idx, row in enumerate(rows):
             row_frame = ctk.CTkFrame(self.keyboard_frame, fg_color=BG_COLOR)
             row_frame.pack(pady=3)
             
-            if r_idx == 2:
+            if r_idx == last_row_idx:
                 btn = ctk.CTkButton(row_frame, text="ENTER", font=("Helvetica", 12, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
                                     command=self.submit_guess, width=65, height=45, hover_color="#6c6e6f")
                 btn.pack(side="left", padx=3)
                 
-            for char in row:
-                btn = ctk.CTkButton(row_frame, text=char, font=("Helvetica", 14, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
-                                    width=40, height=45, command=lambda c=char: self.type_char(c), hover_color="#6c6e6f")
+            for display_char, internal_char in row:
+                btn = ctk.CTkButton(row_frame, text=display_char, font=("Helvetica", 14, "bold"), fg_color=KEY_BG, text_color=TEXT_COLOR, 
+                                    width=40 if len(display_char) == 1 else 75, 
+                                    height=45, command=lambda c=internal_char: self.type_char(c), hover_color="#6c6e6f")
                 btn.pack(side="left", padx=2)
-                self.keys[char] = btn
+                self.keys[internal_char] = btn
                 
-            if r_idx == 2:
+            if r_idx == last_row_idx:
                 btn = ctk.CTkButton(row_frame, text="⌫", font=("Helvetica", 16), fg_color=KEY_BG, text_color=TEXT_COLOR, 
                                     command=self.delete_char, width=50, height=45, hover_color="#6c6e6f")
                 btn.pack(side="left", padx=3)
@@ -125,9 +154,9 @@ class WordleGUI:
         """Xử lý sự kiện khi gõ bàn phím vật lý"""
         if self.game.is_over or self.is_animating: return
         
-        char = event.keysym.upper()
+        char = event.char
         if char.isalpha() and len(char) == 1:
-            self.type_char(char)
+            self.type_char(char.upper())
         elif event.keysym == "BackSpace":
             self.delete_char()
         elif event.keysym == "Return":
@@ -135,18 +164,32 @@ class WordleGUI:
 
     def type_char(self, char):
         if self.game.is_over or self.is_animating: return
-        if len(self.current_guess) < 6:
-            self.current_guess += char
-            self.update_current_row()
+        if self.lang == 'vn':
+            new_buffer = self.hidden_buffer + char.lower()
+            processed = bogo.process_sequence(new_buffer).upper()
+            if len(processed) <= self.columns:
+                self.hidden_buffer = new_buffer
+                self.current_guess = processed
+                self.update_current_row()
+        else:
+            if len(self.current_guess) < self.columns:
+                self.current_guess += char
+                self.update_current_row()
 
     def delete_char(self):
         if self.game.is_over or self.is_animating: return
-        if len(self.current_guess) > 0:
-            self.current_guess = self.current_guess[:-1]
-            self.update_current_row()
+        if self.lang == 'vn':
+            if len(self.hidden_buffer) > 0:
+                self.hidden_buffer = self.hidden_buffer[:-1]
+                self.current_guess = bogo.process_sequence(self.hidden_buffer).upper()
+                self.update_current_row()
+        else:
+            if len(self.current_guess) > 0:
+                self.current_guess = self.current_guess[:-1]
+                self.update_current_row()
 
     def update_current_row(self):
-        for i in range(6):
+        for i in range(self.columns):
             if i < len(self.current_guess):
                 # Khi đang gõ phím: Bo viền sáng (#565758), nháy khung pop nhẹ
                 self.labels[self.current_row][i]["lbl"].configure(text=self.current_guess[i])
@@ -171,12 +214,14 @@ class WordleGUI:
     def submit_guess(self):
         if self.game.is_over or self.is_animating: return
         
-        if len(self.current_guess) != 6:
-            self.show_toast("Từ bạn nhập phải có đủ 6 chữ cái!")
+        if self.lang == 'en' and len(self.current_guess) != self.columns:
+            self.show_toast(f"Từ bạn nhập phải có đủ {self.columns} chữ cái!")
+            return
+        elif self.lang == 'vn' and len(self.current_guess) == 0:
             return
             
-        if not self.manager.is_valid(self.current_guess):
-            self.show_toast("Từ này không có trong từ điển tiếng Anh!")
+        if not self.manager.is_valid(self.current_guess, lang=self.lang):
+            self.show_toast("Không có trong từ điển!" if self.lang == 'vn' else "Từ này không có trong từ điển tiếng Anh!")
             return
             
         # Nạp từ vào logic game
@@ -186,9 +231,27 @@ class WordleGUI:
         self.is_animating = True
         self.animate_reveal(0, eval_result)
 
+    def get_base_char(self, char):
+        if self.lang == 'en': return char
+        mapping = {
+            'Á': 'A', 'À': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+            'Ấ': 'Â', 'Ầ': 'Â', 'Ẩ': 'Â', 'Ẫ': 'Â', 'Ậ': 'Â',
+            'Ắ': 'Ă', 'Ằ': 'Ă', 'Ẳ': 'Ă', 'Ẵ': 'Ă', 'Ặ': 'Ă',
+            'É': 'E', 'È': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+            'Ế': 'Ê', 'Ề': 'Ê', 'Ể': 'Ê', 'Ễ': 'Ê', 'Ệ': 'Ê',
+            'Í': 'I', 'Ì': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+            'Ó': 'O', 'Ò': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+            'Ố': 'Ô', 'Ồ': 'Ô', 'Ổ': 'Ô', 'Ỗ': 'Ô', 'Ộ': 'Ô',
+            'Ớ': 'Ơ', 'Ờ': 'Ơ', 'Ở': 'Ơ', 'Ỡ': 'Ơ', 'Ợ': 'Ơ',
+            'Ú': 'U', 'Ù': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+            'Ứ': 'Ư', 'Ừ': 'Ư', 'Ử': 'Ư', 'Ữ': 'Ư', 'Ự': 'Ư',
+            'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y',
+        }
+        return mapping.get(char, char)
+
     def animate_reveal(self, col, eval_result):
         """Hiệu ứng màu lật chuyển màu liền mạch mượt mà hơn"""
-        if col < 6:
+        if col < len(eval_result):
             char, status = eval_result[col]
             
             color = BG_COLOR
@@ -204,22 +267,25 @@ class WordleGUI:
             self.labels[self.current_row][col]["lbl"].configure(fg_color=color)
             
             # Cập nhật màu lên bàn phím ảo tương ứng ngay lập tức
-            if char in self.keys:
-                current_bg = self.keys[char].cget("fg_color")
+            base_char = self.get_base_char(char)
+            if base_char in self.keys:
+                current_bg = self.keys[base_char].cget("fg_color")
                 if status == Game.CORRECT:
-                    self.keys[char].configure(fg_color=CORRECT_COLOR, hover_color=CORRECT_COLOR)
+                    self.keys[base_char].configure(fg_color=CORRECT_COLOR, hover_color=CORRECT_COLOR)
                 elif status == Game.PRESENT and current_bg != CORRECT_COLOR:
-                    self.keys[char].configure(fg_color=PRESENT_COLOR, hover_color=PRESENT_COLOR)
+                    self.keys[base_char].configure(fg_color=PRESENT_COLOR, hover_color=PRESENT_COLOR)
                 elif status == Game.ABSENT and current_bg not in [CORRECT_COLOR, PRESENT_COLOR]:
-                    self.keys[char].configure(fg_color=ABSENT_COLOR, hover_color=ABSENT_COLOR)
+                    self.keys[base_char].configure(fg_color=ABSENT_COLOR, hover_color=ABSENT_COLOR)
             
             # Gọi đệ quy hàm để lật ô kế tiếp sau 150ms (Nhanh, dứt khoát hơn 250ms)
             self.root.after(150, self.animate_reveal, col + 1, eval_result)
         else:
-            # Khi đã lật đủ 6 ô:
+            # Khi đã lật đủ chiều dài của từ:
             self.is_animating = False
             self.current_row += 1
             self.current_guess = ""
+            if self.lang == 'vn':
+                self.hidden_buffer = ""
             
             # Đợi một nhịp 300ms rồi mới kết thúc để người chơi kịp nhìn màu
             if self.game.is_won:
