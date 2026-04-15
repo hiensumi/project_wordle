@@ -42,7 +42,7 @@ class WordleGUI:
         self.setup_frame = ctk.CTkFrame(self.root, fg_color=BG_COLOR)
         self.setup_frame.pack(expand=True, fill='both')
         
-        ctk.CTkLabel(self.setup_frame, text="WORDLE 6+", font=("Helvetica", 42, "bold"), text_color=TEXT_COLOR).pack(pady=(120, 20))
+        ctk.CTkLabel(self.setup_frame, text="WORDLE++", font=("Helvetica", 42, "bold"), text_color=TEXT_COLOR).pack(pady=(120, 20))
         ctk.CTkLabel(self.setup_frame, text="Đồ án môn DSA (Cấu trúc dữ liệu)", font=("Helvetica", 14), text_color=KEY_BG).pack(pady=(0, 40))
         
         ctk.CTkLabel(self.setup_frame, text="Vui lòng chọn chế độ:", font=("Helvetica", 16, "bold"), text_color=TEXT_COLOR).pack(pady=10)
