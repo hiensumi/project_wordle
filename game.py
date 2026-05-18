@@ -49,24 +49,29 @@ class Game:
         guess = guess.upper()
             
         result = [[char, self.ABSENT] for char in guess]
-        answer_chars = list(self.answer)
         
-        # Bước 1: Kiểm tra đúng vị trí (CORRECT)
-        for i in range(min(len(guess), len(self.answer))):
-            if guess[i] == answer_chars[i]:
+        # Bảng băm đếm tần suất các chữ cái trong đáp án chưa được khớp đúng vị trí
+        unmatched_counts = {}
+        
+        # Bước 1: Kiểm tra đúng vị trí (CORRECT) và lưu các chữ cái dư
+        for i in range(len(self.answer)):
+            # Nếu guess có đủ độ dài tới i và khớp ký tự với answer
+            if i < len(guess) and guess[i] == self.answer[i]:
                 result[i][1] = self.CORRECT
-                answer_chars[i] = None  # Đánh dấu đã dùng
+            else:
+                # Lưu chữ cái chưa được khớp đúng vị trí vào dictionary
+                unmatched_counts[self.answer[i]] = unmatched_counts.get(self.answer[i], 0) + 1
                 
-        # Bước 2: Kiểm tra đúng chữ sai vị trí (PRESENT) dư và sai vị trí hoàn toàn (ABSENT)
+        # Bước 2: Kiểm tra đúng chữ sai vị trí (PRESENT)
         for i in range(len(guess)):
             if result[i][1] == self.CORRECT:
                 continue
                 
             char = guess[i]
-            if char in answer_chars:
+            # Tra cứu Hash Map tốn điểm chi phí O(1)
+            if unmatched_counts.get(char, 0) > 0:
                 result[i][1] = self.PRESENT
-                # Đánh dấu là đã dùng để không báo vàng 2 lần cho 1 chữ có 1 lần xuất hiện
-                answer_chars[answer_chars.index(char)] = None
+                unmatched_counts[char] -= 1  # Trừ đi 1 để tránh báo vàng nhiều lần
                 
         return [(item[0], item[1]) for item in result]
 
